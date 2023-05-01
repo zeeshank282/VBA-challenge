@@ -1,0 +1,147 @@
+Sub VBA_Challang()
+
+'Decalare variable'
+
+    Dim WS As Worksheet
+    Dim TickerName As String
+    Dim LastRowtiker As Long
+    Dim LastRowPercentChange As Long
+    Dim SummaryTableRow As Long
+    Dim PreviousAmount As Long
+    Dim LastRowValue As Long
+    Dim TotalTickerVolume As Double
+    Dim OpenPrice As Double
+    Dim ClosePrice As Double
+    Dim YearlyChange As Double
+    Dim PercentChange As Double
+    Dim GreatestIncrease As Double
+    Dim GreatestDecrease As Double
+    Dim GreatestTotalVolume As Double
+    
+    'Loop through each worksheet and find the last row of data for each worksheet'
+    
+    For Each WS In Worksheets
+    
+        LastRowticker = WS.Cells(Rows.Count, 1).End(xlUp).Row
+        
+        ' Set up summary table headers and metric table on each worksheet'
+    
+        WS.Range("I1").Value = "Ticker"
+        WS.Range("J1").Value = "Yearly Change"
+        WS.Range("K1").Value = "Percent Change"
+        WS.Range("L1").Value = "Total Stock Volume"
+        WS.Range("O2").Value = "Greatest % Increase"
+        WS.Range("O3").Value = "Greatest % Decrease"
+        WS.Range("O4").Value = "Greatest Total Volume"
+        WS.Range("P1").Value = "Ticker"
+        WS.Range("Q1").Value = "Value"
+    
+    'Initialize variables for calculations and setting counters'
+    
+        TotalTickerVolume = 0           'Total volume of shares traded for each ticker'
+        GreatestIncrease = 0            'Largest percentage increase in price for any ticker'
+        GreatestDecrease = 0            'Largest percentage decrease in price for any ticker'
+        GreatestTotalVolume = 0         'Largest total volume of shares traded for any ticker'
+        SummaryTableRow = 2             'Starting row number for summary table entries'
+        PreviousAmount = 2              'Starting row number for current ticker group'
+
+        'Creating a nested for loop, to loop through each row in the dataset'
+    
+        For i = 2 To LastRowticker
+        
+         'Calculates the total volume of shares traded for the current ticker'
+        
+            TotalTickerVolume = TotalTickerVolume + WS.Cells(i, 7).Value
+        
+            If WS.Cells(i + 1, 1).Value <> WS.Cells(i, 1).Value Then
+
+                TickerName = WS.Cells(i, 1).Value
+                
+               'Writes the ticker name and total volume to the summary table'
+                
+                WS.Range("I" & SummaryTableRow).Value = TickerName
+                WS.Range("L" & SummaryTableRow).Value = TotalTickerVolume
+               
+                TotalTickerVolume = 0
+                
+                'Gets the opening and closing prices for the current ticker group and calculates the yearly change in price'
+
+                OpenPrice = WS.Range("C" & PreviousAmount)
+            
+                ClosePrice = WS.Range("F" & i)
+                
+                YearlyChange = ClosePrice - OpenPrice
+                
+                'Writes the yearly change to the summary table and formats it as currency'
+            
+                WS.Range("J" & SummaryTableRow).Value = YearlyChange
+                WS.Range("J" & SummaryTableRow).NumberFormat = "$0.00"
+                
+                'Calculates the percent change in price and identifies the greatest percent increase, greatest percent decrease, and greatest total volume'
+
+                    If OpenPrice = 0 Then
+                        PercentChange = 0
+                         
+                        Else
+                        YearlyOpen = WS.Range("C" & PreviousAmount)
+            
+                        PercentChange = YearlyChange / OpenPrice
+                    
+                    End If
+                    
+                    WS.Range("K" & SummaryTableRow).Value = PercentChange
+                    WS.Range("K" & SummaryTableRow).NumberFormat = "0.00%"
+
+                    If WS.Range("J" & SummaryTableRow).Value >= 0 Then
+                    WS.Range("J" & SummaryTableRow).Interior.ColorIndex = 4
+                    
+                        Else
+                        WS.Range("J" & SummaryTableRow).Interior.ColorIndex = 3
+                
+                    End If
+                    
+                    'Moves to the next row in the summary table and sets the starting row number for the next ticker group'
+            
+                    SummaryTableRow = SummaryTableRow + 1
+              
+                    PreviousAmount = i + 1
+                
+            End If
+            
+           'Loops through each worksheet in the workbook and performs calculations on the data'
+           'and writes the results of these calculations to a summary table on each worksheet, along with the identified tickers with the greatest changes and volumes'
+            
+            Next i
+    
+            LastRowPercentChange = WS.Cells(Rows.Count, 11).End(xlUp).Row
+
+            For i = 2 To LastRowPercentChange
+            
+                If WS.Range("K" & i).Value > WS.Range("Q2").Value Then
+                    WS.Range("Q2").Value = WS.Range("K" & i).Value
+                    WS.Range("P2").Value = WS.Range("I" & i).Value
+                
+                End If
+
+            
+                If WS.Range("K" & i).Value < WS.Range("Q3").Value Then
+                WS.Range("Q3").Value = WS.Range("K" & i).Value
+                WS.Range("P3").Value = WS.Range("I" & i).Value
+                    
+                End If
+
+            
+                If WS.Range("L" & i).Value > WS.Range("Q4").Value Then
+                WS.Range("Q4").Value = WS.Range("L" & i).Value
+                WS.Range("P4").Value = WS.Range("I" & i).Value
+                    
+                End If
+
+            Next i
+        
+            WS.Range("Q2").NumberFormat = "0.00%"
+            WS.Range("Q3").NumberFormat = "0.00%"
+
+    Next WS
+                
+End Sub
